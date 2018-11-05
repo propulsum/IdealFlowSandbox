@@ -6,6 +6,8 @@ from Source import Source
 from ColorScale import ColorScale
 import numpy as np
 
+from StreamElementCollection import StreamElementCollection
+
 
 class IdealFlowSandbox:
     def __init__(self, master):
@@ -16,9 +18,9 @@ class IdealFlowSandbox:
         self.info_bar = self.init_info_bar()
         self.plot_canvas = self.init_plot()
         self.coords_label = self.init_coords()
-        self.sources = {}
+        self.StreamElements = StreamElementCollection(self.plot_canvas)
 
-        self.calculator = IdealFlowCalculator(self.plot_canvas.get_scale(), self.sources)
+        self.calculator = IdealFlowCalculator(self.plot_canvas.get_scale(), self.StreamElements)
 
     modes = {
         "streamline": 1,
@@ -35,9 +37,9 @@ class IdealFlowSandbox:
         self.add_source("Source3", 1, -1, 1)
         self.add_source("Sink3", -1, -1, -1)
 
-        self.draw_streamlines_around_source(self.sources["Source"])
-        self.draw_streamlines_around_source(self.sources["Source2"])
-        self.draw_streamlines_around_source(self.sources["Source3"])
+        self.draw_streamlines_around_source(self.StreamElements.get_source("Source"))
+        self.draw_streamlines_around_source(self.StreamElements.get_source("Source2"))
+        self.draw_streamlines_around_source(self.StreamElements.get_source("Source3"))
         self.redraw()
 
     def is_mode(self, test):
@@ -76,25 +78,22 @@ class IdealFlowSandbox:
         button1.pack()
 
     def auto_draw(self):
-        for s in self.sources.values():
+        for s in self.StreamElements.get_all_sources():
             if s.m > 0:
                 self.draw_streamlines_around_source(s)
         self.redraw()
 
     def reset(self):
-        for s in self.sources.values():
+        for s in self.StreamElements.get_all_sources():
             s.erase()
-        self.sources = {}
-        self.calculator = IdealFlowCalculator(self.plot_canvas.get_scale(), self.sources)
+        self.StreamElements = StreamElementCollection(self.plot_canvas)
+        self.calculator = IdealFlowCalculator(self.plot_canvas.get_scale(), self.StreamElements)
         self.clear_streamlines()
         self.object_counter = 0
 
     def toggle_add_source(self):
         self.set_mode("source")
-        s = Source(self.plot_canvas, "temp", 1, 0, 0)
-        self.sources["temp"] = s
-
-        s.draw()
+        self.StreamElements.add_source("temp", 1, 0, 0)
 
     def init_info_bar(self):
         info_bar = Frame(self.master,
@@ -117,16 +116,15 @@ class IdealFlowSandbox:
         return plot_canvas
 
     def add_source(self, tag, m, x, y):
-        s = Source(self.plot_canvas, tag, m, x, y)
-        self.sources[tag] = s
-        s.control(self.info_bar, self.object_counter)
+        self.StreamElements.add_source(tag, m, x, y)\
+            .control(self.info_bar, self.object_counter)
+
         self.object_counter += 1
         self.clear_streamlines()
-        s.draw()
 
     def redraw(self):
-        for s in self.sources:
-            self.sources[s].front()
+        for s in self.StreamElements.get_all_sources():
+            s.front()
 
     def motion(self, event):
         r = self.plot_canvas.cursor_coords(event)
@@ -134,12 +132,11 @@ class IdealFlowSandbox:
 
         if self.is_mode("source"):
             x, y = self.plot_canvas.transform([event.x, event.y])
-            self.sources["temp"].move(x, y)
+            self.StreamElements.get_source("temp").move(x, y)
 
     def click(self, event):
         if self.is_mode("source"):
-            self.sources["temp"].erase()
-            del self.sources["temp"]
+            self.StreamElements.delete_source("temp")
             self.set_mode("streamline")
             x, y = self.plot_canvas.transform([event.x, event.y])
             self.add_source("Source " + str(self.object_counter + 1), -1, x, y)

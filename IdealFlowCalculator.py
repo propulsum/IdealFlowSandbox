@@ -2,14 +2,14 @@ import math
 
 
 class IdealFlowCalculator:
-    def __init__(self, scale, sources):
+    def __init__(self, scale, stream_elements):
         self.scale = scale
-        self.sources = sources
+        self.StreamElements = stream_elements
 
     def u(self, x, y):
         u_inf = 0
         u = u_inf
-        for source in self.sources.values():
+        for source in self.StreamElements.get_all_sources():
             u += source.u(x, y)
 
         return u
@@ -17,7 +17,7 @@ class IdealFlowCalculator:
     def v(self, x, y):
         u_inf = 0
         v = u_inf
-        for source in self.sources.values():
+        for source in self.StreamElements.get_all_sources():
             v += source.v(x, y)
 
         return v
@@ -60,7 +60,7 @@ class IdealFlowCalculator:
 
     def is_near_sink(self, p):
         e = .1
-        for s in self.sources.values():
+        for s in self.StreamElements.get_all_sources():
             if s.m < 0:
                 rx = abs(s.x - p[0])
                 ry = abs(s.y - p[1])
