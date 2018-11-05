@@ -7,16 +7,14 @@ class IdealFlowCalculator:
         self.StreamElements = stream_elements
 
     def u(self, x, y):
-        u_inf = 0
-        u = u_inf
+        u = self.StreamElements.get_free_stream().u()
         for source in self.StreamElements.get_all_sources():
             u += source.u(x, y)
 
         return u
 
     def v(self, x, y):
-        u_inf = 0
-        v = u_inf
+        v = self.StreamElements.get_free_stream().v()
         for source in self.StreamElements.get_all_sources():
             v += source.v(x, y)
 

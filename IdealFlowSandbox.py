@@ -68,6 +68,9 @@ class IdealFlowSandbox:
         button1 = Button(f, text="Add Source", command=self.toggle_add_source)
         button1.pack()
 
+        button1 = Button(f, text="Add Free Stream", command=self.add_free_stream)
+        button1.pack()
+
         button1 = Button(f, text="New Flow", command=self.reset)
         button1.pack()
 
@@ -122,6 +125,11 @@ class IdealFlowSandbox:
         self.object_counter += 1
         self.clear_streamlines()
 
+    def add_free_stream(self):
+        self.set_mode("streamline")
+        self.StreamElements.add_free_stream(1, 0)
+        self.clear_streamlines()
+
     def redraw(self):
         for s in self.StreamElements.get_all_sources():
             s.front()
@@ -139,7 +147,7 @@ class IdealFlowSandbox:
             self.StreamElements.delete_source("temp")
             self.set_mode("streamline")
             x, y = self.plot_canvas.transform([event.x, event.y])
-            self.add_source("Source " + str(self.object_counter + 1), -1, x, y)
+            self.add_source("Source " + str(self.object_counter + 1), 1, x, y)
         else:
             r = self.plot_canvas.transform([event.x, event.y])
             self.draw_streamline(r)
