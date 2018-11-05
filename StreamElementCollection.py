@@ -1,12 +1,14 @@
 from FreeStream import FreeStream
 from Source import Source
+from ElementTypes import ElementTypes
 
 
 class StreamElementCollection:
-    def __init__(self, canvas):
+    def __init__(self, canvas, watcher):
         self.plot = canvas
         self.__sources = {}
         self.free_stream = FreeStream(self.plot, 0, 0)
+        self.watcher = watcher
 
     def get_source(self, tag):
         return self.__sources[tag]
@@ -18,7 +20,7 @@ class StreamElementCollection:
         return self.free_stream
 
     def add_source(self, tag, m, x, y):
-        s = Source(self.plot, tag, m, x, y)
+        s = Source(self.plot, tag, m, x, y, ElementTypes["source"], self.watcher)
         self.__sources[tag] = s
         s.draw()
 

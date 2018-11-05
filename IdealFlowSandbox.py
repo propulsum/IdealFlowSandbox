@@ -2,7 +2,6 @@ import math
 from tkinter import *
 from IdealFlowCalculator import IdealFlowCalculator
 from PlotCanvas import PlotCanvas
-from Source import Source
 from ColorScale import ColorScale
 import numpy as np
 
@@ -18,7 +17,7 @@ class IdealFlowSandbox:
         self.info_bar = self.init_info_bar()
         self.plot_canvas = self.init_plot()
         self.coords_label = self.init_coords()
-        self.StreamElements = StreamElementCollection(self.plot_canvas)
+        self.StreamElements = StreamElementCollection(self.plot_canvas, self.watcher)
 
         self.calculator = IdealFlowCalculator(self.plot_canvas.get_scale(), self.StreamElements)
 
@@ -27,19 +26,16 @@ class IdealFlowSandbox:
         "source": 2
     }
 
+    def watcher(self):
+        self.clear_streamlines()
+
     def demo_1(self):
         self.reset()
 
         self.add_source("Source", 1, 0, 1)
         self.add_source("Sink", -1, 0, -1)
-        self.add_source("Source2", 1, 1, 1)
-        self.add_source("Sink2", -1, 1, -1)
-        self.add_source("Source3", 1, -1, 1)
-        self.add_source("Sink3", -1, -1, -1)
 
         self.draw_streamlines_around_source(self.StreamElements.get_source("Source"))
-        self.draw_streamlines_around_source(self.StreamElements.get_source("Source2"))
-        self.draw_streamlines_around_source(self.StreamElements.get_source("Source3"))
         self.redraw()
 
     def is_mode(self, test):
@@ -89,7 +85,7 @@ class IdealFlowSandbox:
     def reset(self):
         for s in self.StreamElements.get_all_sources():
             s.erase()
-        self.StreamElements = StreamElementCollection(self.plot_canvas)
+        self.StreamElements = StreamElementCollection(self.plot_canvas, self.watcher)
         self.calculator = IdealFlowCalculator(self.plot_canvas.get_scale(), self.StreamElements)
         self.clear_streamlines()
         self.object_counter = 0

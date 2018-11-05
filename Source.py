@@ -1,9 +1,10 @@
 import math
 from tkinter import *
+from ElementTypes import ElementTypes
 
 
 class Source:
-    def __init__(self, master, tag, m, x, y):
+    def __init__(self, master, tag, m, x, y, element_type, watcher):
         self.m = m
         self.x = x
         self.y = y
@@ -12,26 +13,51 @@ class Source:
         self.master = master
         self.border_frame = None
 
+        self.type = element_type
+
         self.edit_mode = False
 
+        self.watcher = watcher
+
+        self.summary = StringVar()
+
+        self.x_var = StringVar()
+        self.x_var.set(x)
+        self.x_var.trace("w", self.mywarWritten)
+
+        self.y_var = StringVar()
+        self.y_var.set(y)
+        self.y_var.trace("w", self.mywarWritten)
+
+        self.m_var = StringVar()
+        self.m_var.set(m)
+        self.m_var.trace("w", self.mywarWritten)
+
     def u(self, x, y):
-        factor = self.m / (2 * math.pi)
-        num = x - self.x
-        den = math.pow(x - self.x, 2) + math.pow(y - self.y, 2)
-        return factor * num / den
+        if self.type == ElementTypes["source"]:
+            factor = self.m / (2 * math.pi)
+            num = x - self.x
+            den = math.pow(x - self.x, 2) + math.pow(y - self.y, 2)
+            return factor * num / den
+
+        return 0
 
     def v(self, x, y):
-        factor = self.m / (2 * math.pi)
-        num = y - self.y
-        den = math.pow(x - self.x, 2) + math.pow(y - self.y, 2)
-        return factor * num / den
+        if self.type == ElementTypes["source"]:
+            factor = self.m / (2 * math.pi)
+            num = y - self.y
+            den = math.pow(x - self.x, 2) + math.pow(y - self.y, 2)
+            return factor * num / den
+
+        return 0
 
     def draw(self):
-        self.master.draw_circle(self.tag, self.x, self.y, "Green", radius=0.1)
-        size = .05
-        self.master.draw_line(self.tag, self.x - size, self.y, self.x + size, self.y, "White")
-        if self.m > 0:
-            self.master.draw_line(self.tag, self.x, self.y - size + .01, self.x, self.y + size + .01, "White")
+        if self.type == ElementTypes["source"]:
+            self.master.draw_circle(self.tag, self.x, self.y, "Green", radius=0.1)
+            size = .05
+            self.master.draw_line(self.tag, self.x - size, self.y, self.x + size, self.y, "White")
+            if self.m > 0:
+                self.master.draw_line(self.tag, self.x, self.y - size + .01, self.x, self.y + size + .01, "White")
 
     def erase(self):
         self.master.remove(self.tag)
@@ -66,7 +92,9 @@ class Source:
         s += "m: " + str(self.m) + '\n'
         s += "p: (" + str(self.x) + ", " + str(self.y) + ")"
 
-        title = Label(container_frame, text=s, bg=color, justify="left", width=12)
+        self.summary.set(s)
+
+        title = Label(container_frame, textvariable=self.summary, bg=color, justify="left", width=12)
         title.bind("<Button-1>", self.toggle_edit)
         title.pack()
 
@@ -74,19 +102,33 @@ class Source:
         self.edit_frame.configure(background=color)
         self.edit_frame.pack()
 
-        self.create_edit_field("m:", color, str(self.m), 1)
-        self.create_edit_field("x:", color, str(self.x), 2)
-        self.create_edit_field("y:", color, str(self.y), 3)
+        self.create_edit_field("m:", color, 1, self.m_var)
+        self.create_edit_field("x:", color, 2, self.x_var)
+        self.create_edit_field("y:", color, 3, self.y_var)
 
         self.toggle_edit(None)
 
         return self.edit_frame
 
-    def create_edit_field(self, var, color, default, row):
-        label = Label(self.edit_frame, text=var, bg=color)
+    def mywarWritten(self, *args):
+        try:
+            new_x = float(self.x_var.get())
+            new_y = float(self.y_var.get())
+            new_m = float(self.m_var.get())
+        except ValueError:
+            return
+        self.move(new_x, new_y)
+        self.m = new_m
+        self.watcher()
+        s = self.display + '\n'
+        s += "m: " + str(self.m) + '\n'
+        s += "p: (" + str(self.x) + ", " + str(self.y) + ")"
+        self.summary.set(s)
+
+    def create_edit_field(self, label, color, row, var):
+        label = Label(self.edit_frame, text=label, bg=color)
         label.grid(row=row, column=0, sticky="E")
-        entry = Entry(self.edit_frame, width=9)
-        entry.insert(END, default)
+        entry = Entry(self.edit_frame, width=9, textvariable=var)
         entry.grid(row=row, column=1, sticky="W")
 
     def toggle_edit(self, event):
